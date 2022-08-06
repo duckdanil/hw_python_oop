@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Type
 
 
 @dataclass
@@ -23,6 +23,7 @@ class Training:
     """Базовый класс тренировки."""
     LEN_STEP: float = 0.65
     M_IN_KM: float = 1000
+    MIN_IN_H: float = 60
 
     def __init__(self,
                  action: int,
@@ -43,7 +44,8 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        raise NotImplementedError('Опеределите в классах RUN, WLK, SWM')
+        raise NotImplementedError(f'Опеределите get_spent_calories в классе'
+                                  f'{type(self).__name__}')
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
@@ -58,7 +60,6 @@ class Running(Training):
     """Тренировка: бег."""
     CF_RUN_1: float = 18
     CF_RUN_2: float = 20
-    MIN_IN_H: float = 60
 
     def get_spent_calories(self) -> float:
         return ((self.CF_RUN_1 * self.get_mean_speed()
@@ -71,7 +72,6 @@ class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
     CF_WLK_1: float = 0.035
     CF_WLK_2: float = 0.029
-    MIN_IN_H: float = 60
 
     def __init__(self,
                  action: int,
@@ -116,11 +116,13 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    workout: Dict[str, Training] = {'SWM': Swimming,
-                                    'RUN': Running,
-                                    'WLK': SportsWalking}
+    workout: Dict[str, Type[Training]] = {'SWM': Swimming,
+                                          'RUN': Running,
+                                          'WLK': SportsWalking}
     if workout_type not in workout:
-        raise ValueError('Отсутствует такой тип тренировки')
+        list_trainings = ' '.join(workout)
+        raise ValueError(f'Отсутствует такой тип тренировки.'
+                         f'Нужен {list_trainings} ')
     return workout[workout_type](*data)
 
 
